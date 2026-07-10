@@ -1,0 +1,82 @@
+services:
+  db:
+    image: mysql:8.4
+    container_name: skillpulse-db
+    restart: unless-stopped
+
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./mysql/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+
+    networks:
+      - skillpulse-network
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mysqladmin ping -h 127.0.0.1 -u root -p$$MYSQL_ROOT_PASSWORD --silent"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+
+    image: skillpulse-backend:local
+    container_name: skillpulse-backend
+    restart: unless-stopped
+
+    environment:
+      PORT: "8080"
+      GIN_MODE: release
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+
+    depends_on:
+      db:
+        condition: service_healthy
+
+    networks:
+      - skillpulse-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+
+    image: skillpulse-frontend:local
+    container_name: skillpulse-frontend
+    restart: unless-stopped
+
+    depends_on:
+      backend:
+        condition: service_started
+
+    ports:
+      - "8080:80"
+
+    networks:
+      - skillpulse-network
+
+networks:
+  skillpulse-network:
+    name: skillpulse-network
+    driver: bridge
+
+volumes:
+  mysql-data:
+    name: skillpulse-mysql-data
