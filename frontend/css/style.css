@@ -413,3 +413,14 @@ body {
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
 }
+
+/* CI/CD deployment status banner */
+.deployment-banner {
+    width: 100%;
+    padding: 12px 20px;
+    text-align: center;
+    font-weight: 600;
+    background: linear-gradient(90deg, #2563eb, #7c3aed);
+    color: #ffffff;
+    letter-spacing: 0.2px;
+}

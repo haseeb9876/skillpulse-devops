@@ -12,3 +12,5 @@ terraform-init-debug.log
 
 .DS_Store
 Thumbs.db
+
+*.backup
